@@ -38,9 +38,9 @@ Cell **initSetBoard(char *clues); //intializes a board from a given clue set
 Cell *getCell(int row, int col, Cell **board);
 
 bool checkBoard(Cell **board); //Checks a given board for legality
-bool isLegal(Cell *cell);
-bool checkRow(Cell **board, int);
-bool checkCol(Cell **board);
+bool isLegalCell(Cell *cell);
+bool checkRow(Cell **board, int row);
+bool checkCol(Cell **board, int col);
 bool checkSquare(Cell **board);
 
 void printBoard();
@@ -69,7 +69,7 @@ Cell** initBoard()
             }
             cell->clue = false;
             cell->value = 0;
-            board[i][j] = cell;
+            board[i][j] = *cell;
         }
     }
 }
@@ -92,9 +92,27 @@ Cell** initSetBoard(char *clues)
 
     //checking that all given values are numerical
     for(int i = 0; i < len; i++){
-        int clue = atoi(clues[i]);
-
+        char c = clues[i];
+        if(!isdigit){
+            fprintf(stderr, "The given clue sequence contains the non-numeric char %c", c);
+            return NULL;
+        }
     }
+
+    Cell** board = initBoard();
+
+    int loc = 0; //current location in the clues string
+    for(int row = 0; row < BOARDSIZE; row++){
+        for(int col = 0; col < BOARDSIZE; col++){
+            Cell *curCell = getCell(row, col, board);
+            curCell->clue = true;
+            int cellVal = atoi(clues[loc]);
+            curCell->value = cellVal;
+            loc++;
+        }
+    }
+
+    return board;
 }
 
 
@@ -114,7 +132,7 @@ Cell *getCell(int row, int col, Cell** board)
            return NULL;
     }
 
-    Cell *cell = board[row][col];
+    Cell *cell = &board[row][col];
     return cell;
 }
 
@@ -133,6 +151,77 @@ bool checkBoard(Cell **board) //TO-DO finish ALL legality functions
 
 } 
 
+/**
+ * Checks if a given row is legal. That is that the row contains only unique 
+ * numbers. This function will return false if the board is not initialized or 
+ * if row is less than 0 or greater or equal to BOARDSIZE.
+ */ 
+bool checkRow(Cell **board, int row)
+{
+    if(board == NULL || row < 0 || row >= BOARDSIZE){
+        return false;
+    }
+
+    for(int i = 0; i < BOARDSIZE; i++){
+        int num = getCell(row, i, board)->value;
+        if(num == 0){  //Never need to check uninitialized values
+            continue;
+        }
+        int j = i + 1; //We want to check all other values in the row but never
+                       //the original value. In addition we never need to 
+                       //"recheck" a given value pair. 
+
+        
+        for(j; j < BOARDSIZE; j++){
+            int checkNum = getCell(row, j, board)->value;
+            if(checkNum == 0){ //Never need to check unitialized values.
+                continue;
+            }
+            if(num == checkNum){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
+ * Checks if a given coluk=mn is legal. That is that each cell only contains 
+ * unique values between 1 - 9.
+ * 
+ * This function will return false if:
+ * a. The board is not initialzed
+ * b. col is < 0 or greater than or equal to BOARDSIZE.
+ */ 
+bool checkCol(Cell **board, int col)
+{
+    if(board == NULL || col < 0 || col >= BOARDSIZE){
+        return NULL;
+    }
+
+    for(int i = 0; i < BOARDSIZE; i++){
+        int num = getCell(i, col, board)->value;
+        if(num == 0){  //Never need to check uninitialized values
+            continue;
+        }
+        int j = i + 1; //We want to check all other values in the row but never
+                       //the original value. In addition we never need to 
+                       //"recheck" a given value pair. 
+
+        
+        for(j; j < BOARDSIZE; j++){
+            int checkNum = getCell(j, col, board)->value;
+            if(checkNum == 0){ //Never need to check unitialized values.
+                continue;
+            }
+            if(num == checkNum){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 /**
  * Deletes a given board from memory cell by cell. If the given board is NULL
@@ -147,7 +236,7 @@ void deleteBoard(Cell **board)
     
     for(int i = 0; i < BOARDSIZE; i++){
         for(int j = 0; j < BOARDSIZE; j++){
-            Cell *cell = board[i][j];
+            Cell *cell = &board[i][j];
             if(cell != NULL){
                 free(cell);
             }
