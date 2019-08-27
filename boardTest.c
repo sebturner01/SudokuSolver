@@ -12,9 +12,14 @@ void makeMove(int row, int col, int val);
 int main(const int argc, const char *argv[])
 {
     checkInputs(argc, argv);
-    Cell **board = initSetBoard(argv[1]);
+    char *clue = malloc(strlen(argv[1]) + 1);
+    strcpy(clue, argv[1]);
+    Cell **board = initSetBoard(clue);
     bool stillPlaying = true;
     printBoard(board);
+
+    //free(clue);
+    return 0;
 
 } 
 

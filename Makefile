@@ -15,7 +15,7 @@ $(PROG): $(OBJS)
 
 boardTest.o: sudokuBoard.h
 
-.PHONY clean
+.PHONY: clean
 
 clean:
 	rm -f *~ *.o
