@@ -41,6 +41,7 @@ Cell *getCell(int row, int col, Cell **board);
 void setCellVal(Cell **board, int row, int col, int val);
 
 //Legality functions
+bool isCompleteBoard(Cell **board);
 bool checkBoard(Cell **board); 
 bool isLegalCell(Cell **board, int row, int col);
 bool isLegalRow(Cell **board, int row);

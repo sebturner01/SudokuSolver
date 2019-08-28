@@ -16,7 +16,18 @@ int main(const int argc, const char *argv[])
     strcpy(clue, argv[1]);
     Cell **board = initSetBoard(clue);
     bool stillPlaying = true;
-    printBoard(board);
+    int row, col, val;
+    while(stillPlaying){
+        system("clear");
+        printBoard(board);
+        printf("Please enter a move: [row] [col] [val]\n");
+        scanf("%d %d %d", &row, &col, &val);
+        setCellVal(board, row, col, val);
+        if(checkBoard(board) && isCompleteBoard(board)){
+            stillPlaying = false;
+        }
+    }   
+    
     bool legal = checkBoard(board);
     printf("%d\n", legal);
     //free(clue);

@@ -35,15 +35,16 @@ typedef struct cell{
 /********* function prototypes *********/ 
 
 //Initialization, setters, and getters
-Cell **initBoard();    //initialzes an empty board
+Cell **initBoard();               //initialzes an empty board
 Cell **initSetBoard(char *clues); //intializes a board with the given set
 Cell *getCell(int row, int col, Cell **board);
 void setCellVal(Cell **board, int row, int col, int val);
 static char *convertToWSStr(char *str);
 
 //Legality functions
-bool checkBoard(Cell **board); 
+bool isCompleteBoard(Cell **Board);
 bool isLegalCell(Cell **board, int row, int col);
+bool checkBoard(Cell **board);
 bool isLegalRow(Cell **board, int row);
 bool isLegalCol(Cell **board, int col);
 bool isLegalSquare(Cell **board, int row, int col);
@@ -219,6 +220,28 @@ bool isLegalCell(Cell** board, int row, int col)
          isLegalRow(board, row) ||
          isLegalSquare(board, row, col))){
         return false;
+    }
+    return true;
+}
+
+/**
+ * Checks the given sudoku board for completion (that is there are no 
+ * uninitialized values in the board). This function will return false if it 
+ * finds any zeros (unitialized values). It will also return false it the given
+ * board is not initialized
+ */ 
+bool isCompleteBoard(Cell **board)
+{
+    if(board == NULL){
+        return false;
+    }
+    for(int i = 0; i < BOARDSIZE; i++){
+        for(int j = 0; j < BOARDSIZE; j++){
+            int val = getCell(i, j, board)->value;
+            if(val == 0){
+                return false;
+            }
+        }
     }
     return true;
 }
