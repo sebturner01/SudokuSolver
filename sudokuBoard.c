@@ -349,20 +349,25 @@ bool isLegalSquare(Cell **board, int row, int col)
     }
     int refRow = row - (row % 3); //Gives a row and col value that are easy to 
     int refCol = col - (col % 3); //work from. This references the top lefthand
-                                  //cell in a given square
+                                  //cell in a given 3x3 square
 
-    int maxRow = refRow + 3;
-    int maxCol = refCol + 3;
+    int maxRow = refRow + 3; //maxRow and maxCol are not used inclusively so it 
+    int maxCol = refCol + 3; //is okay to simply add 3
 
     for(int i = refRow; i < maxRow; i++){ 
         for(int j = refCol; j < maxCol; j++){
-            int num = getCell(row, col, board)->value;
+            int num = getCell(i, j, board)->value;
             if(num == 0){ //No need to check unitialized values
                 continue;
             }
-
-            for(int sRow = i; sRow < maxRow; sRow++){
-                for(int sCol = j; sCol < maxCol; sCol++){
+            int sRow = i;
+            int sCol = j + 1;   //Always want to check the next value. If this 
+            if(sCol >= maxCol){ //causes sCol to be greater than maxCol then we 
+                sRow += 1;      //want to check the next row
+                sCol = refCol;
+            }
+            for(;sRow < maxRow; sRow++){
+                for(;sCol < maxCol; sCol++){
                     int checkNum = getCell(sRow, sCol, board)->value;
                     if(checkNum == 0){ //No need to check unitialzed values
                         continue;
@@ -395,7 +400,7 @@ void printBoard(Cell **board)
     for(int i = 0; i < BOARDSIZE; i++){
         printf(" %d ", i);
         if((i + 1) % 3 == 0){
-            printf("  ");
+            printf("  "); //Spaces to delinate squares
         }
     }
 
@@ -410,22 +415,24 @@ void printBoard(Cell **board)
     printf("_____\n");
 
     for(int row = 0; row < BOARDSIZE; row++){
-        printf("%d|  ", row);
+        printf("%d|  ", row); //Reference numbers for rows
         for(int col = 0; col < BOARDSIZE; col++){
             int val = getCell(row, col, board)->value;
             if(val != 0){
                 printf(" %d ", val);
             }
             else{
-                printf("   ");
+                printf("   "); //print nothing if value is not initalized
             }
             if((col + 1) % 3 == 0){
-                printf("  ");
+                printf("  "); //Extra space every three repetions to easily see 
+                              //sqaures
             }
         }
         printf("\n");
         if((row + 1) % 3 == 0){
-            printf("\n");
+            printf("\n"); //Extra newline every three repetions to easily see 
+                          //sqaures
         }
     }
 }

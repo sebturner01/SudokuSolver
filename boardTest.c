@@ -17,7 +17,8 @@ int main(const int argc, const char *argv[])
     Cell **board = initSetBoard(clue);
     bool stillPlaying = true;
     printBoard(board);
-
+    bool legal = checkBoard(board);
+    printf("%d\n", legal);
     //free(clue);
     return 0;
 
@@ -55,7 +56,7 @@ void checkInputs(const int argc, const char *argv[])
     for(int i = 0; i < len; i++){
         char c = clueStr[i];
         if(!isdigit(c)){
-            fprintf(stderr, "The given clue sequence contains the non-numeric char %c", c);
+            fprintf(stderr, "The given clue sequence contains the non-numeric char %c\n", c);
             exit(3);
         }
     }
