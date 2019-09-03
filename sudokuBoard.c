@@ -35,14 +35,16 @@ typedef struct cell{
 /********* function prototypes *********/ 
 
 //Initialization, setters, and getters
-Cell **initBoard();    //initialzes an empty board
-Cell **initSetBoard(char *clues); //intializes a board from a given clue set
+Cell **initBoard();               //initialzes an empty board
+Cell **initSetBoard(char *clues); //intializes a board with the given set
 Cell *getCell(int row, int col, Cell **board);
 void setCellVal(Cell **board, int row, int col, int val);
+static char *convertToWSStr(char *str);
 
 //Legality functions
-bool checkBoard(Cell **board); 
+bool isCompleteBoard(Cell **Board);
 bool isLegalCell(Cell **board, int row, int col);
+bool checkBoard(Cell **board);
 bool isLegalRow(Cell **board, int row);
 bool isLegalCol(Cell **board, int col);
 bool isLegalSquare(Cell **board, int row, int col);
@@ -61,9 +63,12 @@ void deleteBoard();
  */ 
 Cell** initBoard()
 {
-    Cell** board = calloc(BOARDSIZE, sizeof(Cell));
+    Cell** board = calloc(BOARDSIZE, __SIZEOF_POINTER__);
+    if(board == NULL){
+        return NULL;
+    }
     for(int i = 0; i < BOARDSIZE; i++){
-        board[i] = calloc(BOARDSIZE, sizeof(Cell));
+        board[i] = calloc(BOARDSIZE, __SIZEOF_POINTER__);
         if(board[i] == NULL){
             return NULL;
         }
@@ -90,9 +95,9 @@ Cell** initBoard()
  */ 
 Cell** initSetBoard(char *clues)
 {
-    int len = sizeof(clues) - 1; //remove the null terminator from size calcs
+    int len = strlen(clues); 
     if(len != 81){
-        fprintf(stderr, "invalid clues string");
+        fprintf(stderr, "Invalid clues string\n");
         return NULL;
     }
 
@@ -100,25 +105,29 @@ Cell** initSetBoard(char *clues)
     for(int i = 0; i < len; i++){
         char c = clues[i];
         if(!isdigit(c)){
-            fprintf(stderr, "The given clue sequence contains the non-numeric char %c", c);
+            fprintf(stderr, "The given clue sequence contains the non-numeric char %c\n", c);
             return NULL;
         }
     }
-
+    char *newClues = convertToWSStr(clues);
     Cell** board = initBoard();
-
-    int loc = 0; //current location in the clues string
+    if(board == NULL){
+        fprintf(stderr, "Unable to intialize board");
+        exit(4);
+    }
+    int loc = 0;
+    int cellVal;
     for(int row = 0; row < BOARDSIZE; row++){
         for(int col = 0; col < BOARDSIZE; col++){
             Cell *curCell = getCell(row, col, board);
-            curCell->clue = true;
-            const char charVal = clues[loc];
-            int cellVal = atoi(&charVal);
-            curCell->value = cellVal;
-            loc++;
+            sscanf(&newClues[loc], "%d", &cellVal);
+            if(cellVal > 0){  
+                 curCell->clue = true;
+                 curCell->value = cellVal;
+            }
+            loc += 2;
         }
     }
-
     return board;
 }
 
@@ -165,6 +174,31 @@ void setCellVal(Cell **board, int row, int col, int val)
     cell->value = val;
 }
 
+
+/**
+ * Converts the clues input (used in initSetBoard) to a series of characters
+ * seperated by whitespace for easier reading. This function will return NULL if
+ * `clues` is NULL otherwise it will return the same string but with whitespace 
+ * between each character.
+ */ 
+static char *convertToWSStr(char *str)
+{
+    if(str == NULL){
+        return NULL;
+    }
+
+    int len = strlen(str);
+    char *newStr = malloc(sizeof(char)*len*2+1); //Double the length of the  
+                                                 //input string and then 
+                                                 //re-add the null terminator 
+    for(int loc = 0; loc < len; loc++){
+        newStr[loc*2] = str[loc];
+        newStr[loc*2+1] = ' ';
+    }
+    newStr[strlen(newStr)+1] = '\0';
+    return newStr;
+}
+
 /**
  * Checks if a the cell at the given [row][col] position has a legal value given
  * the relvant row, column, and square it is in. 
@@ -191,15 +225,37 @@ bool isLegalCell(Cell** board, int row, int col)
 }
 
 /**
+ * Checks the given sudoku board for completion (that is there are no 
+ * uninitialized values in the board). This function will return false if it 
+ * finds any zeros (unitialized values). It will also return false it the given
+ * board is not initialized
+ */ 
+bool isCompleteBoard(Cell **board)
+{
+    if(board == NULL){
+        return false;
+    }
+    for(int i = 0; i < BOARDSIZE; i++){
+        for(int j = 0; j < BOARDSIZE; j++){
+            int val = getCell(i, j, board)->value;
+            if(val == 0){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
  * Checks the given sudoku board for legality of position. If the position is 
  * not legal then this function will return false. This function will also 
  * return false in the case that the given board is NULL or if any of cells 
  * within it are NULL
  */
-bool checkBoard(Cell **board) //TO-DO finish ALL legality functions
+bool checkBoard(Cell **board)
 {
     if(board == NULL){
-        fprintf(stderr, "The given board is not initialized");
+        fprintf(stderr, "The given board is not initialized\n");
         return false;
     }
 
@@ -316,20 +372,25 @@ bool isLegalSquare(Cell **board, int row, int col)
     }
     int refRow = row - (row % 3); //Gives a row and col value that are easy to 
     int refCol = col - (col % 3); //work from. This references the top lefthand
-                                  //cell in a given square
+                                  //cell in a given 3x3 square
 
-    int maxRow = refRow + 3;
-    int maxCol = refCol + 3;
+    int maxRow = refRow + 3; //maxRow and maxCol are not used inclusively so it 
+    int maxCol = refCol + 3; //is okay to simply add 3
 
     for(int i = refRow; i < maxRow; i++){ 
         for(int j = refCol; j < maxCol; j++){
-            int num = getCell(row, col, board)->value;
+            int num = getCell(i, j, board)->value;
             if(num == 0){ //No need to check unitialized values
                 continue;
             }
-
-            for(int sRow = i; sRow < maxRow; sRow++){
-                for(int sCol = j; sCol < maxCol; sCol++){
+            int sRow = i;
+            int sCol = j + 1;   //Always want to check the next value. If this 
+            if(sCol >= maxCol){ //causes sCol to be greater than maxCol then we 
+                sRow += 1;      //want to check the next row
+                sCol = refCol;
+            }
+            for(;sRow < maxRow; sRow++){
+                for(;sCol < maxCol; sCol++){
                     int checkNum = getCell(sRow, sCol, board)->value;
                     if(checkNum == 0){ //No need to check unitialzed values
                         continue;
@@ -358,31 +419,47 @@ void printBoard(Cell **board)
     }
 
     //Printing some reference coordinates for columns
+    printf("    ");
     for(int i = 0; i < BOARDSIZE; i++){
         printf(" %d ", i);
+        if((i + 1) % 3 == 0){
+            printf("  "); //Spaces to delinate squares
+        }
     }
 
     printf("\n");
 
     //First seperator line
+    printf("   ");
     for(int i = 0; i < BOARDSIZE; i++){
         printf("___");
     }
 
-    printf("\n");
+    printf("_____\n");
 
     for(int row = 0; row < BOARDSIZE; row++){
-        printf("%d", row);
+        printf("%d|  ", row); //Reference numbers for rows
         for(int col = 0; col < BOARDSIZE; col++){
             int val = getCell(row, col, board)->value;
-            printf("|%d|", val);
+            if(val != 0){
+                printf(" %d ", val);
+            }
+            else{
+                printf("   "); //print nothing if value is not initalized
+            }
+            if((col + 1) % 3 == 0){
+                printf("  "); //Extra space every three repetions to easily see 
+                              //sqaures
+            }
         }
         printf("\n");
-        for(int i = 0; i < BOARDSIZE; i++){
-            printf("___");
+        if((row + 1) % 3 == 0){
+            printf("\n"); //Extra newline every three repetions to easily see 
+                          //sqaures
         }
     }
 }
+
 
 
 /**
@@ -392,7 +469,7 @@ void printBoard(Cell **board)
 void deleteBoard(Cell **board)
 {
     if(board == NULL){
-        fprintf(stderr, "The given board is not initialized");
+        fprintf(stderr, "The given board is not initialized\n");
         return;
     }
     
